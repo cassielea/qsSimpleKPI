@@ -218,6 +218,13 @@ class StatisticBlock extends Component {
         fontStyles: {},
         kpiLink: item.kpiLink,
         useLink: item.useLink,
+        action: item.action,
+        actionBefore: item.actionBefore,
+        doAction: item.doAction,
+        websiteUrl: item.websiteUrl,    
+        field1: item.field1,
+        value1: item.value1,
+        variable1: item.variable1,
         textAlignment: item.textAlignment,
         infographic: item.infographic,
         embeddedItem: item.embeddedItem,
@@ -377,20 +384,57 @@ class StatisticBlock extends Component {
   }
 
   onKPIClick(kpi) {
-    const services = this.props.services;
-    const isAllowOpenSheet = (this.props.services.State
-      && !this.props.services.State.isInEditMode());
-    if(kpi.useLink && isAllowOpenSheet && services.Routing) {
-      let linkId;
-      if (typeof(kpi.kpiLink) === "string")
-        linkId = kpi.kpiLink
-      else
-        linkId = kpi.kpiLink && kpi.kpiLink.id;
+ 
+	      var services = this.props.services;
+	      var isAllowOpenSheet = this.props.services.State && !this.props.services.State.isInEditMode();
+	      var fld = kpi.field1;
+	      var val = kpi.value1;
+	      var vari = kpi.variable1;
+	      var app = services.Qlik.currApp();
 
-      if(linkId)
-        services.Routing.goToSheet(linkId, 'analysis');
-    }
-  }
+        if (kpi.action === 'gotoSheet') {
+	        if (isAllowOpenSheet && services.Routing) {
+	          var linkId = undefined;
+	          if (typeof kpi.kpiLink === "string") linkId = kpi.kpiLink;
+              else linkId = kpi.kpiLink && kpi.kpiLink.id;
+	          if (linkId) services.Routing.goToSheet(linkId, 'analysis');
+	        }
+	      }if (kpi.action === 'openWebsite') {
+	        if (isAllowOpenSheet && services.Routing) {
+	          var url = kpi.websiteUrl;
+	          if (!_.isEmpty(url)) {
+	            if (url.startsWith('http://') || url.startsWith('https://')) {
+	              window.open(url);
+	            } else {
+	              window.open('http://' + url);
+	            }
+	          }
+	        }
+	      }
+
+        if ( !kpi.doAction ) {
+						return;
+					}
+          
+	      switch (kpi.actionBefore) {
+	        case "selectField":
+	          if (!_.isEmpty(fld) && !_.isEmpty(val)) {
+	            app.field(fld).selectMatch(val, false);
+	          }
+	          break;
+	        case "setVariable":
+	          if (!_.isEmpty(vari)) {
+	            app.variable.setContent(vari, val).then(function () /*reply*/{
+	              angular.noop();
+	            });
+	          }
+	          break;
+	        default:
+	          break;
+	      }
+	
+	      
+	    }
 
   onDimensionLabelClick(dimNo, value) {
     this.props.services && this.props.services.QlikComponent

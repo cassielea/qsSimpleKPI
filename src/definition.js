@@ -26,6 +26,88 @@ let dims = {
   allowAdd: true,
   allowRemove: true
 };
+  // ****************************************************************************************
+	// Actions
+	// ****************************************************************************************
+	var doAction = {
+      ref : "qDef.doAction",
+      label: "Actions before navigating",
+      type : "boolean",
+      component : "switch",
+      //translation : "properties.kpi.doAction",
+      defaultValue : !1,
+      options : [{
+        value : !0,
+        translation : "properties.on"
+      }, {
+        value : !1,
+        translation : "properties.off"
+      }
+    ]
+	};
+
+	var actionOptions = [
+		{
+			value: "none",
+			label: "None"
+		},
+		{
+			value: "selectField",
+			label: "Select Value in Field"
+		},
+		{
+			value: "setVariable",
+			label: "Set Variable Value"
+		}
+	];
+
+	var actionBefore = {
+		type: "string",
+		component: "dropdown",
+		label: "Action",
+		ref: "qDef.actionBefore",
+		defaultValue: "none",
+		show: function ( data ) {
+			return data.qDef.doAction;
+		},
+		options: actionOptions
+	};
+
+	var fieldEnabler = ['selectField'];
+	var field1 = {
+		type: "string",
+		ref: "qDef.field1",
+		label: "Field",
+		expression: "optional",
+		show: function ( data ) {
+			return fieldEnabler.indexOf( data.qDef.actionBefore ) > -1 && data.qDef.doAction;
+		}
+	};
+
+	var variableEnabler = ['setVariable'];
+	var variable1 = {
+		type: "string",
+		ref: "qDef.variable1",
+		label: "Variable Name",
+		expression: "optional",
+		show: function ( data ) {
+			return variableEnabler.indexOf( data.qDef.actionBefore ) > -1 && data.qDef.doAction;
+		}
+	};
+
+	var valueEnabler = ['selectField', 'setVariable'];
+	var value1 = {
+		type: "string",
+		ref: "qDef.value1",
+		label: "Value",
+		expression: "optional",
+		show: function ( data ) {
+			return valueEnabler.indexOf( data.qDef.actionBefore ) > -1 && data.qDef.doAction;
+		}
+	};
+  // ****************************************************************************************
+	//  End Actions
+	// ****************************************************************************************
 
 // Kpi array
 let kpis = {
@@ -77,23 +159,30 @@ let kpis = {
         defaultValue: "#808080",
         options: COLOR_OPTIONS
       },
-      linkToSheet : {
-        type : "items",
-        items : {
-          useLink : {
-            ref : "qDef.useLink",
-            type : "boolean",
-            component : "switch",
-            translation : "properties.kpi.linkToSheet",
-            defaultValue : !1,
-            options : [{
-                value : !0,
-                translation : "properties.on"
-              }, {
-                value : !1,
-                translation : "properties.off"
-              }
-            ]
+      navBehaviour : {
+          type: "items",
+          label: "Navigation Behaviour",
+          items: {
+           action: {
+              ref: "qDef.action",
+              label: "Navigation Action",
+              type: "string",
+              component: "dropdown",
+              default: "none",
+              options: [
+                {
+                  value: "none",
+                  label: "None"
+                },
+                {
+                  value: "gotoSheet",
+                  label: "Go to a specific sheet"
+                },  
+                {
+                  value: "openWebsite",
+                  label: "Open website"
+                }
+              ]
           },
           sheetLink: { 
             ref: "sheetLink", // 'sheet-dropdown' need it!!! See bellow.
@@ -101,17 +190,37 @@ let kpis = {
              // Non visible property, detect changes in "qDef.kpiLink". It needs because of 'sheet-dropdown' component.
             component: DetectChangesInComponent('qDef.kpiLink'), 
             show : function (data) {
-              return data.qDef.useLink;
+              return data.qDef.action === 'gotoSheet';
             }
           },
           kpiLink : {
             ref: "qDef.kpiLink",
+            label: "Sheet:",
             type : "string",
             component : 'sheet-dropdown',            
             show : function (data) {
-              return data.qDef.useLink;
+              return data.qDef.action === 'gotoSheet';
             }
-          }
+          },
+          websiteUrl : {
+		        ref: "qDef.websiteUrl",
+		        label: "Url:",
+	        	type: "string",
+		        expression: "optional",
+		        show: function ( data ) {
+			        return data.qDef.action === 'openWebsite';
+		        }
+	        }
+        }
+      },
+      performAction: {
+        type : "items",
+        items : {
+          doAction: doAction,
+          actionBefore: actionBefore,
+          field1: field1,
+					variable1: variable1,
+					value1: value1
         }
       },
       groupByDimension: {
